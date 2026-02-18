@@ -777,7 +777,10 @@
                         `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code` +
                         `&past_days=90&forecast_days=3` +
                         `&timezone=America/Vancouver`;
-                    return fetch(url).then(r => r.json());
+                    return fetch(url).then(r => r.json()).then(json => {
+                        if (json.error) throw new Error(`API error for ${s.name}: ${json.reason}`);
+                        return json;
+                    });
                 });
 
                 const results = await Promise.all(promises);
@@ -830,6 +833,12 @@
                     <tbody>
                         ${data.map(d => {
                             const c = d.data.current;
+                            if (!c) {
+                                return `<tr>
+                                    <td><strong>${d.station.name}</strong></td>
+                                    <td colspan="6" style="color:var(--text-muted);font-style:italic">Data unavailable</td>
+                                </tr>`;
+                            }
                             const alerts = getStationAlerts(d);
                             return `<tr>
                                 <td><strong>${d.station.name}</strong></td>
