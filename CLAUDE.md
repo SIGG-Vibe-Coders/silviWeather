@@ -22,9 +22,9 @@ There are no build, lint, or test commands. Changes to `index.html` are immediat
 
 `index.html` is organized into three co-located sections:
 
-- **CSS** (lines ~7–379): Dark-theme styling using CSS custom properties. Alert colors: frost = blue, heat = orange, drought = yellow, flood = teal.
-- **HTML** (lines ~380–551): Four tabs — Dashboard, Daily History, Thresholds, Alert Log. Status banner shows 4 aggregated metrics.
-- **JavaScript** (lines ~553–1039): Vanilla JS, no framework. Structured as distinct functional modules:
+- **CSS** (lines ~7–411): Dark-theme styling using CSS custom properties. Alert colors: frost = blue, heat = orange, drought = yellow, flood = teal, wind = slate.
+- **HTML** (lines ~412–625): Four tabs — Dashboard, Daily History, Thresholds, Alert Log. Status banner shows 4 aggregated metrics (including wind).
+- **JavaScript** (lines ~626–1179): Vanilla JS, no framework. Structured as distinct functional modules:
 
   | Module | Responsibility |
   |--------|----------------|
@@ -58,11 +58,12 @@ User selects region → fetchWeatherData() → Open-Meteo API (past_days=30, for
 | Heat stress | Max temp > 35°C OR VPD > 3.0 kPa | None |
 | Drought | 14+ consecutive days < 1mm precipitation | None |
 | Flood | Single day > 50mm OR 3-day total > 75mm | None |
+| Wind | Max daily wind speed > 60 km/h | None |
 
 All thresholds are user-configurable via the Thresholds tab and stored in localStorage.
 
 ## Extending the App
 
-To add a new region or station, edit the `REGIONS` object near line 559 in `index.html`. Each station requires `name`, `lat`, `lon`, and `elevation`.
+To add a new region or station, edit the `REGIONS` object near line 632 in `index.html`. Each station requires `name`, `lat`, `lon`, and `elevation`.
 
 Email alert delivery requires a GitHub Actions workflow (not included) that reads `silvi-subscribers` and calls the Open-Meteo API server-side.
