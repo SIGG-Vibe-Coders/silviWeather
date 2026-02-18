@@ -768,7 +768,8 @@
             const today = new Date().toISOString().split('T')[0];
 
             try {
-                const promises = region.stations.map(s => {
+                weatherData = [];
+                for (const s of region.stations) {
                     const url = `https://api.open-meteo.com/v1/forecast?` +
                         `latitude=${s.lat}&longitude=${s.lon}` +
                         `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,` +
@@ -777,17 +778,10 @@
                         `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code` +
                         `&past_days=90&forecast_days=3` +
                         `&timezone=America/Vancouver`;
-                    return fetch(url).then(r => r.json()).then(json => {
-                        if (json.error) throw new Error(`API error for ${s.name}: ${json.reason}`);
-                        return json;
-                    });
-                });
-
-                const results = await Promise.all(promises);
-                weatherData = region.stations.map((s, i) => ({
-                    station: s,
-                    data: results[i]
-                }));
+                    const json = await fetch(url).then(r => r.json());
+                    if (json.error) throw new Error(`API error for ${s.name}: ${json.reason}`);
+                    weatherData.push({ station: s, data: json });
+                }
 
                 renderCurrentConditions(weatherData);
                 renderHistoryTable(weatherData);
