@@ -704,7 +704,6 @@
             if (!region) return;
 
             const today = new Date().toISOString().split('T')[0];
-            const past30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
 
             try {
                 const promises = region.stations.map(s => {
@@ -714,7 +713,7 @@
                         `et0_fao_evapotranspiration,wind_speed_10m_max` +
                         `&hourly=vapour_pressure_deficit` +
                         `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code` +
-                        `&past_days=30&forecast_days=3` +
+                        `&past_days=90&forecast_days=3` +
                         `&timezone=America/Vancouver`;
                     return fetch(url).then(r => r.json());
                 });
@@ -826,7 +825,10 @@
                 } else break;
             }
             if (dryStreak >= thresholds.drought.days) {
-                alerts.push({ type: 'drought', label: `Dry ${dryStreak}d` });
+                const streakLabel = dryStreak >= 90
+                    ? `Dry ${dryStreak}d (90d max lookback)`
+                    : `Dry ${dryStreak}d`;
+                alerts.push({ type: 'drought', label: streakLabel });
             }
 
             // Wind: max daily wind speed > threshold
