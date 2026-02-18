@@ -20,6 +20,7 @@
             --heat: #f97316;
             --drought: #eab308;
             --flood: #3b82f6;
+            --wind: #64748b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -138,6 +139,7 @@
         .status-card.heat::before { background: var(--heat); }
         .status-card.drought::before { background: var(--drought); }
         .status-card.flood::before { background: var(--flood); }
+        .status-card.wind::before { background: var(--wind); }
 
         .status-card .label {
             font-size: 0.75rem;
@@ -288,6 +290,7 @@
         .alert-badge.heat { background: rgba(249, 115, 22, 0.15); color: var(--heat); }
         .alert-badge.drought { background: rgba(234, 179, 8, 0.15); color: var(--drought); }
         .alert-badge.flood { background: rgba(59, 130, 246, 0.15); color: var(--flood); }
+        .alert-badge.wind { background: rgba(100, 116, 139, 0.15); color: var(--wind); border-color: var(--wind); }
 
         /* Email alerts section */
         .email-form {
@@ -425,6 +428,11 @@
                 <div class="value" id="floodStatus">—</div>
                 <div class="detail" id="floodDetail">Loading...</div>
             </div>
+            <div class="status-card wind">
+                <div class="label">Wind</div>
+                <div class="value" id="windStatus">—</div>
+                <div class="detail" id="windDetail">Loading...</div>
+            </div>
         </div>
 
         <!-- Tabs -->
@@ -521,6 +529,14 @@
                             <span class="unit">mm</span>
                         </div>
                     </div>
+                    <div class="threshold-group">
+                        <h3><span style="color: var(--wind)">💨</span> Wind</h3>
+                        <div class="threshold-row">
+                            <label>Max wind speed above</label>
+                            <input type="number" id="thresh-wind-speed" value="60" step="5">
+                            <span class="unit">km/h</span>
+                        </div>
+                    </div>
                 </div>
                 <div style="margin-top: 1rem;">
                     <button onclick="saveThresholds()">Save Thresholds</button>
@@ -602,7 +618,8 @@
                 frost: { temp: 1 },
                 heat: { temp: 35, vpd: 3.0 },
                 drought: { days: 14, precip: 1 },
-                flood: { daily: 50, threeDay: 75 }
+                flood: { daily: 50, threeDay: 75 },
+                wind: { speed: 60 }
             };
         }
 
@@ -625,7 +642,8 @@
                 flood: {
                     daily: parseFloat(document.getElementById('thresh-flood-daily').value),
                     threeDay: parseFloat(document.getElementById('thresh-flood-3day').value)
-                }
+                },
+                wind: { speed: parseFloat(document.getElementById('thresh-wind-speed').value) }
             };
             localStorage.setItem('silvi-thresholds', JSON.stringify(thresholds));
             if (weatherData) analyzeAlerts(weatherData);
@@ -647,6 +665,7 @@
             document.getElementById('thresh-drought-precip').value = thresholds.drought.precip;
             document.getElementById('thresh-flood-daily').value = thresholds.flood.daily;
             document.getElementById('thresh-flood-3day').value = thresholds.flood.threeDay;
+            document.getElementById('thresh-wind-speed').value = thresholds.wind.speed;
         }
 
         // ---- Tab navigation ----
@@ -810,6 +829,12 @@
                 alerts.push({ type: 'drought', label: `Dry ${dryStreak}d` });
             }
 
+            // Wind: max daily wind speed > threshold
+            const lastWindSpeed = daily.wind_speed_10m_max[len - 1];
+            if (lastWindSpeed !== null && lastWindSpeed > thresholds.wind.speed) {
+                alerts.push({ type: 'wind', label: `Wind ${lastWindSpeed.toFixed(0)} km/h` });
+            }
+
             // Flood: single day > threshold or 3-day cumulative
             const lastPrecip = daily.precipitation_sum[len - 1];
             if (lastPrecip > thresholds.flood.daily) {
@@ -827,7 +852,7 @@
 
         function analyzeAlerts(data) {
             // Update status cards
-            let worstFrost = null, worstHeat = null, maxDryStreak = 0, maxPrecip = 0;
+            let worstFrost = null, worstHeat = null, maxDryStreak = 0, maxPrecip = 0, maxWindSpeed = null;
 
             data.forEach(d => {
                 const daily = d.data.daily;
@@ -853,6 +878,10 @@
                 // Flood
                 const dayMax = Math.max(...daily.precipitation_sum.filter(v => v !== null));
                 maxPrecip = Math.max(maxPrecip, dayMax);
+
+                // Wind
+                const maxWind = Math.max(...daily.wind_speed_10m_max.filter(v => v !== null));
+                if (maxWindSpeed === null || maxWind > maxWindSpeed) maxWindSpeed = maxWind;
             });
 
             // Frost card
@@ -894,6 +923,13 @@
             floodEl.className = 'value ' + (maxPrecip > thresholds.flood.daily ? 'status-alert' : 'status-ok');
             document.getElementById('floodDetail').textContent =
                 maxPrecip > thresholds.flood.daily ? 'ALERT: Heavy precipitation!' : 'Max daily precip (30d)';
+
+            // Wind card
+            const windEl = document.getElementById('windStatus');
+            windEl.textContent = maxWindSpeed !== null ? `${maxWindSpeed.toFixed(0)} km/h` : '—';
+            windEl.className = 'value ' + (maxWindSpeed > thresholds.wind.speed ? 'status-alert' : 'status-ok');
+            document.getElementById('windDetail').textContent =
+                maxWindSpeed > thresholds.wind.speed ? 'ALERT: High wind event!' : 'Max wind speed (30d)';
 
             // Log new alerts
             const newAlerts = [];
