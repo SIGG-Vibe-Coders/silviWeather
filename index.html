@@ -393,9 +393,9 @@
         </div>
         <div class="header-controls">
             <select id="regionSelect">
-                <option value="kamloops">Kamloops TSA</option>
-                <option value="prince-george">Prince George TSA</option>
-                <option value="williams-lake">Williams Lake TSA</option>
+                <option value="kamloops">Kamloops BA</option>
+                <option value="okanagan">Okanagan BA</option>
+                <option value="kootenays">Kootenays BA</option>
                 <option value="custom">Custom Location</option>
             </select>
             <button onclick="fetchWeatherData()" id="refreshBtn">↻ Refresh</button>
@@ -558,30 +558,34 @@
 
         const REGIONS = {
             'kamloops': {
-                name: 'Kamloops TSA',
+                name: 'Kamloops BA',
                 stations: [
-                    { name: 'Kamloops', lat: 50.7, lon: -120.33, elevation: 345 },
-                    { name: 'Merritt', lat: 50.11, lon: -120.79, elevation: 594 },
-                    { name: 'Salmon Arm', lat: 50.70, lon: -119.28, elevation: 351 },
-                    { name: 'Clearwater', lat: 51.65, lon: -120.04, elevation: 421 },
+                    { name: 'Kamloops',   lat: 50.70, lon: -120.33, elevation: 345  },
+                    { name: 'Merritt',    lat: 50.11, lon: -120.79, elevation: 594  },
+                    { name: 'Lillooet',   lat: 50.69, lon: -121.94, elevation: 543  },
+                    { name: 'Clearwater', lat: 51.65, lon: -120.04, elevation: 421  },
                     { name: 'Logan Lake', lat: 50.50, lon: -120.75, elevation: 1100 },
                 ]
             },
-            'prince-george': {
-                name: 'Prince George TSA',
+            'okanagan': {
+                name: 'Okanagan BA',
                 stations: [
-                    { name: 'Prince George', lat: 53.92, lon: -122.75, elevation: 691 },
-                    { name: 'Vanderhoof', lat: 54.02, lon: -124.00, elevation: 700 },
-                    { name: 'Quesnel', lat: 52.98, lon: -122.49, elevation: 545 },
-                    { name: 'McBride', lat: 53.30, lon: -120.17, elevation: 723 },
+                    { name: 'Revelstoke', lat: 50.98, lon: -118.18, elevation: 445 },
+                    { name: 'Salmon Arm', lat: 50.70, lon: -119.27, elevation: 349 },
+                    { name: 'Vernon',     lat: 50.27, lon: -119.27, elevation: 390 },
+                    { name: 'Kelowna',    lat: 49.88, lon: -119.49, elevation: 433 },
+                    { name: 'Penticton',  lat: 49.48, lon: -119.59, elevation: 344 },
                 ]
             },
-            'williams-lake': {
-                name: 'Williams Lake TSA',
+            'kootenays': {
+                name: 'Kootenays BA',
                 stations: [
-                    { name: 'Williams Lake', lat: 52.18, lon: -122.38, elevation: 940 },
-                    { name: '100 Mile House', lat: 51.64, lon: -121.29, elevation: 930 },
-                    { name: 'Alexis Creek', lat: 52.07, lon: -123.27, elevation: 884 },
+                    { name: 'Grand Forks', lat: 49.03, lon: -118.44, elevation: 524 },
+                    { name: 'Castlegar',   lat: 49.32, lon: -117.66, elevation: 495 },
+                    { name: 'Nelson',      lat: 49.50, lon: -117.28, elevation: 553 },
+                    { name: 'Cranbrook',   lat: 49.50, lon: -115.77, elevation: 920 },
+                    { name: 'Creston',     lat: 49.10, lon: -116.51, elevation: 650 },
+                    { name: 'Invermere',   lat: 50.51, lon: -116.03, elevation: 834 },
                 ]
             },
         };
