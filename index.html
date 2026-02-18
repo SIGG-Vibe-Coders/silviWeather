@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BC Silviculture Weather Alerts</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-hover: #222633;
+            --border: #2a2e3a;
+            --text: #e4e6eb;
+            --text-muted: #8b8fa3;
+            --accent: #4f8ff7;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #22c55e;
+            --frost: #818cf8;
+            --heat: #f97316;
+            --drought: #eab308;
+            --flood: #3b82f6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo svg { width: 32px; height: 32px; }
+
+        .logo h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        .logo span {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 400;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        select, input[type="number"], input[type="email"] {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent);
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity 0.15s;
+        }
+
+        button:hover { opacity: 0.85; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+        }
+
+        /* Status banner */
+        .status-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .status-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .status-card.frost::before { background: var(--frost); }
+        .status-card.heat::before { background: var(--heat); }
+        .status-card.drought::before { background: var(--drought); }
+        .status-card.flood::before { background: var(--flood); }
+
+        .status-card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .status-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-card .detail {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .status-ok { color: var(--success); }
+        .status-warn { color: var(--warning); }
+        .status-alert { color: var(--danger); }
+
+        /* Sections */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Station selector */
+        .station-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        .station-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: border-color 0.15s;
+        }
+
+        .station-item:hover { border-color: var(--accent); }
+        .station-item.selected { border-color: var(--accent); background: rgba(79, 143, 247, 0.05); }
+
+        .station-item .name { font-weight: 600; margin-bottom: 0.25rem; }
+        .station-item .coords { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Thresholds config */
+        .threshold-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .threshold-group {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .threshold-group h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .threshold-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .threshold-row label {
+            flex: 1;
+            color: var(--text-muted);
+        }
+
+        .threshold-row input[type="number"] {
+            width: 80px;
+            text-align: center;
+        }
+
+        .threshold-row .unit {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            width: 30px;
+        }
+
+        /* Weather table */
+        .weather-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .weather-table th {
+            text-align: left;
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .weather-table td {
+            padding: 0.6rem 0.5rem;
+            border-bottom: 1px solid var(--border);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .weather-table tr:hover { background: var(--surface-hover); }
+
+        .alert-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .alert-badge.frost { background: rgba(129, 140, 248, 0.15); color: var(--frost); }
+        .alert-badge.heat { background: rgba(249, 115, 22, 0.15); color: var(--heat); }
+        .alert-badge.drought { background: rgba(234, 179, 8, 0.15); color: var(--drought); }
+        .alert-badge.flood { background: rgba(59, 130, 246, 0.15); color: var(--flood); }
+
+        /* Email alerts section */
+        .email-form {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .email-form input[type="email"] {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { padding: 1rem; }
+            main { padding: 1rem; }
+            .status-banner { grid-template-columns: 1fr 1fr; }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.25rem;
+            background: none;
+            color: var(--text-muted);
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Alert log */
+        .alert-log-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .alert-log-item .timestamp {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+
+        .alert-log-item .msg { font-size: 0.85rem; }
+
+        .no-data {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <svg viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="15" stroke="#4f8ff7" stroke-width="1.5"/>
+                <path d="M8 20 Q10 10 16 8 Q22 10 24 20" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+                <path d="M12 22 Q14 16 16 14 Q18 16 20 22" stroke="#22c55e" stroke-width="1.2" fill="none" opacity="0.6"/>
+                <line x1="16" y1="8" x2="16" y2="24" stroke="#22c55e" stroke-width="0.8" opacity="0.3"/>
+            </svg>
+            <div>
+                <h1>SilviWeather <span>BC Silviculture Weather Alerts</span></h1>
+            </div>
+        </div>
+        <div class="header-controls">
+            <select id="regionSelect">
+                <option value="kamloops">Kamloops TSA</option>
+                <option value="prince-george">Prince George TSA</option>
+                <option value="williams-lake">Williams Lake TSA</option>
+                <option value="custom">Custom Location</option>
+            </select>
+            <button onclick="fetchWeatherData()" id="refreshBtn">↻ Refresh</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Status Cards -->
+        <div class="status-banner" id="statusBanner">
+            <div class="status-card frost">
+                <div class="label">Frost Risk</div>
+                <div class="value" id="frostStatus">—</div>
+                <div class="detail" id="frostDetail">Loading...</div>
+            </div>
+            <div class="status-card heat">
+                <div class="label">Heat Stress</div>
+                <div class="value" id="heatStatus">—</div>
+                <div class="detail" id="heatDetail">Loading...</div>
+            </div>
+            <div class="status-card drought">
+                <div class="label">Drought Index</div>
+                <div class="value" id="droughtStatus">—</div>
+                <div class="detail" id="droughtDetail">Loading...</div>
+            </div>
+            <div class="status-card flood">
+                <div class="label">Flood Risk</div>
+                <div class="value" id="floodStatus">—</div>
+                <div class="detail" id="floodDetail">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" data-tab="dashboard">Dashboard</button>
+            <button class="tab" data-tab="history">Daily History</button>
+            <button class="tab" data-tab="thresholds">Thresholds</button>
+            <button class="tab" data-tab="alerts">Alert Log</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div class="tab-content active" id="tab-dashboard">
+            <div class="section">
+                <h2>📍 Monitoring Stations</h2>
+                <div class="station-grid" id="stationGrid"></div>
+            </div>
+
+            <div class="section">
+                <h2>🌡️ Current Conditions</h2>
+                <div id="currentConditions" class="loading">
+                    <div class="spinner"></div>
+                    <p>Select a region to load weather data</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab -->
+        <div class="tab-content" id="tab-history">
+            <div class="section">
+                <h2>📊 Daily Weather History (Last 30 Days)</h2>
+                <div id="historyTable" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading historical data...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thresholds Tab -->
+        <div class="tab-content" id="tab-thresholds">
+            <div class="section">
+                <h2>⚙️ Alert Thresholds</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                    Configure when alerts should trigger. Changes are saved to your browser.
+                </p>
+                <div class="threshold-grid">
+                    <div class="threshold-group">
+                        <h3><span style="color: var(--frost)">❄️</span> Frost</h3>
+                        <div class="threshold-row">
+                            <label>Min temperature below</label>
+                            <input type="number" id="thresh-frost-temp" value="1" step="0.5">
+                            <span class="unit">°C</span>
+                        </div>
+                        <div class="threshold-row">
+                            <label>Active months</label>
+                            <span style="font-size:0.8rem">May – September</span>
+                        </div>
+                    </div>
+                    <div class="threshold-group">
+                        <h3><span style="color: var(--heat)">🔥</span> Heat Stress</h3>
+                        <div class="threshold-row">
+                            <label>Max temperature above</label>
+                            <input type="number" id="thresh-heat-temp" value="35" step="1">
+                            <span class="unit">°C</span>
+                        </div>
+                        <div class="threshold-row">
+                            <label>VPD exceeds</label>
+                            <input type="number" id="thresh-heat-vpd" value="3.0" step="0.1">
+                            <span class="unit">kPa</span>
+                        </div>
+                    </div>
+                    <div class="threshold-group">
+                        <h3><span style="color: var(--drought)">☀️</span> Drought</h3>
+                        <div class="threshold-row">
+                            <label>Consecutive dry days</label>
+                            <input type="number" id="thresh-drought-days" value="14" step="1">
+                            <span class="unit">days</span>
+                        </div>
+                        <div class="threshold-row">
+                            <label>Daily precip below</label>
+                            <input type="number" id="thresh-drought-precip" value="1" step="0.5">
+                            <span class="unit">mm</span>
+                        </div>
+                    </div>
+                    <div class="threshold-group">
+                        <h3><span style="color: var(--flood)">🌊</span> Flood</h3>
+                        <div class="threshold-row">
+                            <label>Daily precip above</label>
+                            <input type="number" id="thresh-flood-daily" value="50" step="5">
+                            <span class="unit">mm</span>
+                        </div>
+                        <div class="threshold-row">
+                            <label>3-day cumulative above</label>
+                            <input type="number" id="thresh-flood-3day" value="75" step="5">
+                            <span class="unit">mm</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button onclick="saveThresholds()">Save Thresholds</button>
+                    <button class="btn-secondary" onclick="resetThresholds()">Reset to Defaults</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>📧 Email Alerts</h2>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
+                    Get notified when thresholds are exceeded. Alerts are checked daily via GitHub Actions.
+                </p>
+                <div class="email-form">
+                    <input type="email" id="alertEmail" placeholder="your.email@gov.bc.ca">
+                    <button onclick="subscribeEmail()">Subscribe</button>
+                </div>
+                <div id="emailStatus" style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);"></div>
+            </div>
+        </div>
+
+        <!-- Alert Log Tab -->
+        <div class="tab-content" id="tab-alerts">
+            <div class="section">
+                <h2>🔔 Recent Alerts</h2>
+                <div id="alertLog"></div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ============================================
+        // BC Silviculture Weather Alert System
+        // Uses Open-Meteo API (free, no key required)
+        // ============================================
+
+        const REGIONS = {
+            'kamloops': {
+                name: 'Kamloops TSA',
+                stations: [
+                    { name: 'Kamloops', lat: 50.7, lon: -120.33, elevation: 345 },
+                    { name: 'Merritt', lat: 50.11, lon: -120.79, elevation: 594 },
+                    { name: 'Salmon Arm', lat: 50.70, lon: -119.28, elevation: 351 },
+                    { name: 'Clearwater', lat: 51.65, lon: -120.04, elevation: 421 },
+                    { name: 'Logan Lake', lat: 50.50, lon: -120.75, elevation: 1100 },
+                ]
+            },
+            'prince-george': {
+                name: 'Prince George TSA',
+                stations: [
+                    { name: 'Prince George', lat: 53.92, lon: -122.75, elevation: 691 },
+                    { name: 'Vanderhoof', lat: 54.02, lon: -124.00, elevation: 700 },
+                    { name: 'Quesnel', lat: 52.98, lon: -122.49, elevation: 545 },
+                    { name: 'McBride', lat: 53.30, lon: -120.17, elevation: 723 },
+                ]
+            },
+            'williams-lake': {
+                name: 'Williams Lake TSA',
+                stations: [
+                    { name: 'Williams Lake', lat: 52.18, lon: -122.38, elevation: 940 },
+                    { name: '100 Mile House', lat: 51.64, lon: -121.29, elevation: 930 },
+                    { name: 'Alexis Creek', lat: 52.07, lon: -123.27, elevation: 884 },
+                ]
+            },
+        };
+
+        let thresholds = loadThresholds();
+        let currentRegion = 'kamloops';
+        let weatherData = null;
+        let alertHistory = JSON.parse(localStorage.getItem('silvi-alerts') || '[]');
+
+        // ---- Thresholds ----
+
+        function getDefaultThresholds() {
+            return {
+                frost: { temp: 1 },
+                heat: { temp: 35, vpd: 3.0 },
+                drought: { days: 14, precip: 1 },
+                flood: { daily: 50, threeDay: 75 }
+            };
+        }
+
+        function loadThresholds() {
+            const saved = localStorage.getItem('silvi-thresholds');
+            return saved ? JSON.parse(saved) : getDefaultThresholds();
+        }
+
+        function saveThresholds() {
+            thresholds = {
+                frost: { temp: parseFloat(document.getElementById('thresh-frost-temp').value) },
+                heat: {
+                    temp: parseFloat(document.getElementById('thresh-heat-temp').value),
+                    vpd: parseFloat(document.getElementById('thresh-heat-vpd').value)
+                },
+                drought: {
+                    days: parseInt(document.getElementById('thresh-drought-days').value),
+                    precip: parseFloat(document.getElementById('thresh-drought-precip').value)
+                },
+                flood: {
+                    daily: parseFloat(document.getElementById('thresh-flood-daily').value),
+                    threeDay: parseFloat(document.getElementById('thresh-flood-3day').value)
+                }
+            };
+            localStorage.setItem('silvi-thresholds', JSON.stringify(thresholds));
+            if (weatherData) analyzeAlerts(weatherData);
+            alert('Thresholds saved!');
+        }
+
+        function resetThresholds() {
+            thresholds = getDefaultThresholds();
+            localStorage.setItem('silvi-thresholds', JSON.stringify(thresholds));
+            populateThresholdInputs();
+            if (weatherData) analyzeAlerts(weatherData);
+        }
+
+        function populateThresholdInputs() {
+            document.getElementById('thresh-frost-temp').value = thresholds.frost.temp;
+            document.getElementById('thresh-heat-temp').value = thresholds.heat.temp;
+            document.getElementById('thresh-heat-vpd').value = thresholds.heat.vpd;
+            document.getElementById('thresh-drought-days').value = thresholds.drought.days;
+            document.getElementById('thresh-drought-precip').value = thresholds.drought.precip;
+            document.getElementById('thresh-flood-daily').value = thresholds.flood.daily;
+            document.getElementById('thresh-flood-3day').value = thresholds.flood.threeDay;
+        }
+
+        // ---- Tab navigation ----
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ---- Station rendering ----
+
+        function renderStations() {
+            const region = REGIONS[currentRegion];
+            if (!region) return;
+            const grid = document.getElementById('stationGrid');
+            grid.innerHTML = region.stations.map((s, i) => `
+                <div class="station-item selected" data-idx="${i}">
+                    <div class="name">${s.name}</div>
+                    <div class="coords">${s.lat.toFixed(2)}°N, ${Math.abs(s.lon).toFixed(2)}°W · ${s.elevation}m</div>
+                </div>
+            `).join('');
+        }
+
+        // ---- Open-Meteo API ----
+
+        async function fetchWeatherData() {
+            const btn = document.getElementById('refreshBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Loading...';
+
+            const region = REGIONS[currentRegion];
+            if (!region) return;
+
+            const today = new Date().toISOString().split('T')[0];
+            const past30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+
+            try {
+                const promises = region.stations.map(s => {
+                    const url = `https://api.open-meteo.com/v1/forecast?` +
+                        `latitude=${s.lat}&longitude=${s.lon}` +
+                        `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,` +
+                        `et0_fao_evapotranspiration,wind_speed_10m_max` +
+                        `&hourly=vapour_pressure_deficit` +
+                        `&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code` +
+                        `&past_days=30&forecast_days=3` +
+                        `&timezone=America/Vancouver`;
+                    return fetch(url).then(r => r.json());
+                });
+
+                const results = await Promise.all(promises);
+                weatherData = region.stations.map((s, i) => ({
+                    station: s,
+                    data: results[i]
+                }));
+
+                renderCurrentConditions(weatherData);
+                renderHistoryTable(weatherData);
+                analyzeAlerts(weatherData);
+            } catch (err) {
+                document.getElementById('currentConditions').innerHTML =
+                    `<p style="color: var(--danger);">Error fetching data: ${err.message}</p>`;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '↻ Refresh';
+        }
+
+        // ---- Render current conditions ----
+
+        function getWeatherDesc(code) {
+            const codes = {
+                0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+                45: 'Fog', 48: 'Rime fog', 51: 'Light drizzle', 53: 'Drizzle',
+                55: 'Heavy drizzle', 61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+                71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 80: 'Rain showers',
+                81: 'Moderate showers', 82: 'Heavy showers', 85: 'Snow showers',
+                95: 'Thunderstorm', 96: 'Thunderstorm w/ hail'
+            };
+            return codes[code] || `Code ${code}`;
+        }
+
+        function renderCurrentConditions(data) {
+            const container = document.getElementById('currentConditions');
+            container.innerHTML = `
+                <table class="weather-table">
+                    <thead>
+                        <tr>
+                            <th>Station</th>
+                            <th>Temp</th>
+                            <th>Humidity</th>
+                            <th>Precip</th>
+                            <th>Wind</th>
+                            <th>Conditions</th>
+                            <th>Alerts</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(d => {
+                            const c = d.data.current;
+                            const alerts = getStationAlerts(d);
+                            return `<tr>
+                                <td><strong>${d.station.name}</strong></td>
+                                <td>${c.temperature_2m.toFixed(1)}°C</td>
+                                <td>${c.relative_humidity_2m}%</td>
+                                <td>${c.precipitation.toFixed(1)} mm</td>
+                                <td>${c.wind_speed_10m.toFixed(0)} km/h</td>
+                                <td>${getWeatherDesc(c.weather_code)}</td>
+                                <td>${alerts.length ? alerts.map(a => `<span class="alert-badge ${a.type}">${a.label}</span>`).join(' ') : '<span style="color:var(--success)">OK</span>'}</td>
+                            </tr>`;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        // ---- Alert analysis ----
+
+        function getStationAlerts(stationData) {
+            const alerts = [];
+            const daily = stationData.data.daily;
+            const hourly = stationData.data.hourly;
+            if (!daily || !daily.time) return alerts;
+
+            const len = daily.time.length;
+
+            // Frost: min temp < threshold during May-Sep
+            const lastMinTemp = daily.temperature_2m_min[len - 1];
+            const lastDate = new Date(daily.time[len - 1]);
+            const month = lastDate.getMonth() + 1;
+            if (month >= 5 && month <= 9 && lastMinTemp < thresholds.frost.temp) {
+                alerts.push({ type: 'frost', label: `Frost ${lastMinTemp.toFixed(1)}°C` });
+            }
+
+            // Heat: max temp > threshold or VPD > threshold
+            const lastMaxTemp = daily.temperature_2m_max[len - 1];
+            if (lastMaxTemp > thresholds.heat.temp) {
+                alerts.push({ type: 'heat', label: `Heat ${lastMaxTemp.toFixed(1)}°C` });
+            }
+
+            // VPD check (max hourly VPD in last 24h)
+            if (hourly && hourly.vapour_pressure_deficit) {
+                const last24vpd = hourly.vapour_pressure_deficit.slice(-24);
+                const maxVpd = Math.max(...last24vpd.filter(v => v !== null));
+                if (maxVpd > thresholds.heat.vpd) {
+                    alerts.push({ type: 'heat', label: `VPD ${maxVpd.toFixed(1)} kPa` });
+                }
+            }
+
+            // Drought: consecutive days with precip < threshold
+            let dryStreak = 0;
+            for (let i = len - 1; i >= 0; i--) {
+                if (daily.precipitation_sum[i] < thresholds.drought.precip) {
+                    dryStreak++;
+                } else break;
+            }
+            if (dryStreak >= thresholds.drought.days) {
+                alerts.push({ type: 'drought', label: `Dry ${dryStreak}d` });
+            }
+
+            // Flood: single day > threshold or 3-day cumulative
+            const lastPrecip = daily.precipitation_sum[len - 1];
+            if (lastPrecip > thresholds.flood.daily) {
+                alerts.push({ type: 'flood', label: `${lastPrecip.toFixed(0)}mm/day` });
+            }
+            if (len >= 3) {
+                const threeDay = daily.precipitation_sum.slice(-3).reduce((a, b) => a + (b || 0), 0);
+                if (threeDay > thresholds.flood.threeDay) {
+                    alerts.push({ type: 'flood', label: `${threeDay.toFixed(0)}mm/3d` });
+                }
+            }
+
+            return alerts;
+        }
+
+        function analyzeAlerts(data) {
+            // Update status cards
+            let worstFrost = null, worstHeat = null, maxDryStreak = 0, maxPrecip = 0;
+
+            data.forEach(d => {
+                const daily = d.data.daily;
+                const hourly = d.data.hourly;
+                const len = daily.time.length;
+
+                // Frost
+                const minTemp = Math.min(...daily.temperature_2m_min.filter(v => v !== null));
+                if (worstFrost === null || minTemp < worstFrost) worstFrost = minTemp;
+
+                // Heat
+                const maxTemp = Math.max(...daily.temperature_2m_max.filter(v => v !== null));
+                if (worstHeat === null || maxTemp > worstHeat) worstHeat = maxTemp;
+
+                // Drought
+                let streak = 0;
+                for (let i = len - 1; i >= 0; i--) {
+                    if (daily.precipitation_sum[i] < thresholds.drought.precip) streak++;
+                    else break;
+                }
+                maxDryStreak = Math.max(maxDryStreak, streak);
+
+                // Flood
+                const dayMax = Math.max(...daily.precipitation_sum.filter(v => v !== null));
+                maxPrecip = Math.max(maxPrecip, dayMax);
+            });
+
+            // Frost card
+            const frostEl = document.getElementById('frostStatus');
+            const now = new Date();
+            const m = now.getMonth() + 1;
+            if (m >= 5 && m <= 9) {
+                frostEl.textContent = worstFrost !== null ? `${worstFrost.toFixed(1)}°C` : '—';
+                frostEl.className = 'value ' + (worstFrost < thresholds.frost.temp ? 'status-alert' : 'status-ok');
+                document.getElementById('frostDetail').textContent =
+                    worstFrost < thresholds.frost.temp ? 'ALERT: Below threshold!' : 'No frost detected';
+            } else {
+                frostEl.textContent = 'N/A';
+                frostEl.className = 'value';
+                document.getElementById('frostDetail').textContent = 'Monitoring May–Sep only';
+            }
+
+            // Heat card
+            const heatEl = document.getElementById('heatStatus');
+            heatEl.textContent = worstHeat !== null ? `${worstHeat.toFixed(1)}°C` : '—';
+            heatEl.className = 'value ' + (worstHeat > thresholds.heat.temp ? 'status-alert' : 'status-ok');
+            document.getElementById('heatDetail').textContent =
+                worstHeat > thresholds.heat.temp ? 'ALERT: Heat threshold exceeded!' : `Peak temp (30d)`;
+
+            // Drought card
+            const droughtEl = document.getElementById('droughtStatus');
+            droughtEl.textContent = `${maxDryStreak}d`;
+            droughtEl.className = 'value ' + (
+                maxDryStreak >= thresholds.drought.days ? 'status-alert' :
+                maxDryStreak >= thresholds.drought.days * 0.7 ? 'status-warn' : 'status-ok'
+            );
+            document.getElementById('droughtDetail').textContent =
+                maxDryStreak >= thresholds.drought.days ?
+                `ALERT: ${maxDryStreak} dry days!` : `${maxDryStreak} consecutive dry days`;
+
+            // Flood card
+            const floodEl = document.getElementById('floodStatus');
+            floodEl.textContent = `${maxPrecip.toFixed(0)}mm`;
+            floodEl.className = 'value ' + (maxPrecip > thresholds.flood.daily ? 'status-alert' : 'status-ok');
+            document.getElementById('floodDetail').textContent =
+                maxPrecip > thresholds.flood.daily ? 'ALERT: Heavy precipitation!' : 'Max daily precip (30d)';
+
+            // Log new alerts
+            const newAlerts = [];
+            data.forEach(d => {
+                getStationAlerts(d).forEach(a => {
+                    newAlerts.push({
+                        time: new Date().toISOString(),
+                        station: d.station.name,
+                        type: a.type,
+                        label: a.label
+                    });
+                });
+            });
+            if (newAlerts.length) {
+                alertHistory = [...newAlerts, ...alertHistory].slice(0, 100);
+                localStorage.setItem('silvi-alerts', JSON.stringify(alertHistory));
+            }
+            renderAlertLog();
+        }
+
+        // ---- History table ----
+
+        function renderHistoryTable(data) {
+            if (!data || !data.length) return;
+
+            // Use first station for now
+            const d = data[0];
+            const daily = d.data.daily;
+            const container = document.getElementById('historyTable');
+
+            let rows = '';
+            for (let i = daily.time.length - 1; i >= 0; i--) {
+                const date = daily.time[i];
+                const maxT = daily.temperature_2m_max[i];
+                const minT = daily.temperature_2m_min[i];
+                const precip = daily.precipitation_sum[i];
+                const et0 = daily.et0_fao_evapotranspiration[i];
+                const wind = daily.wind_speed_10m_max[i];
+
+                // Check for alerts on this day
+                const badges = [];
+                const month = new Date(date).getMonth() + 1;
+                if (month >= 5 && month <= 9 && minT < thresholds.frost.temp) {
+                    badges.push(`<span class="alert-badge frost">Frost</span>`);
+                }
+                if (maxT > thresholds.heat.temp) {
+                    badges.push(`<span class="alert-badge heat">Heat</span>`);
+                }
+                if (precip > thresholds.flood.daily) {
+                    badges.push(`<span class="alert-badge flood">Flood</span>`);
+                }
+
+                rows += `<tr>
+                    <td>${date}</td>
+                    <td>${maxT !== null ? maxT.toFixed(1) : '—'}</td>
+                    <td>${minT !== null ? minT.toFixed(1) : '—'}</td>
+                    <td>${precip !== null ? precip.toFixed(1) : '—'}</td>
+                    <td>${et0 !== null ? et0.toFixed(1) : '—'}</td>
+                    <td>${wind !== null ? wind.toFixed(0) : '—'}</td>
+                    <td>${badges.join(' ') || '—'}</td>
+                </tr>`;
+            }
+
+            container.innerHTML = `
+                <div style="margin-bottom:0.75rem; font-size:0.85rem; color:var(--text-muted);">
+                    Showing: <strong>${d.station.name}</strong> ·
+                    <select id="historyStationSelect" onchange="switchHistoryStation(this.value)" style="font-size:0.8rem;">
+                        ${data.map((s, i) => `<option value="${i}">${s.station.name}</option>`).join('')}
+                    </select>
+                </div>
+                <table class="weather-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Max °C</th>
+                            <th>Min °C</th>
+                            <th>Precip mm</th>
+                            <th>ET₀ mm</th>
+                            <th>Wind km/h</th>
+                            <th>Flags</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            `;
+        }
+
+        function switchHistoryStation(idx) {
+            if (!weatherData) return;
+            const d = weatherData[idx];
+            // Re-render with selected station
+            const tempData = [d];
+            renderHistoryTable([d, ...weatherData.filter((_, i) => i != idx)]);
+            document.getElementById('historyStationSelect').value = idx;
+        }
+
+        // ---- Alert Log ----
+
+        function renderAlertLog() {
+            const container = document.getElementById('alertLog');
+            if (!alertHistory.length) {
+                container.innerHTML = '<div class="no-data">No alerts recorded yet. Alerts appear when thresholds are exceeded.</div>';
+                return;
+            }
+            container.innerHTML = alertHistory.slice(0, 50).map(a => `
+                <div class="alert-log-item">
+                    <span class="alert-badge ${a.type}">${a.type.toUpperCase()}</span>
+                    <span class="timestamp">${new Date(a.time).toLocaleString()}</span>
+                    <span class="msg"><strong>${a.station}</strong> — ${a.label}</span>
+                </div>
+            `).join('');
+        }
+
+        // ---- Email subscription (placeholder) ----
+
+        function subscribeEmail() {
+            const email = document.getElementById('alertEmail').value;
+            if (!email || !email.includes('@')) {
+                document.getElementById('emailStatus').textContent = 'Please enter a valid email address.';
+                return;
+            }
+            // Store locally for now — GitHub Actions workflow would read from a config
+            let subscribers = JSON.parse(localStorage.getItem('silvi-subscribers') || '[]');
+            if (!subscribers.includes(email)) {
+                subscribers.push(email);
+                localStorage.setItem('silvi-subscribers', JSON.stringify(subscribers));
+            }
+            document.getElementById('emailStatus').innerHTML =
+                `✅ <strong>${email}</strong> subscribed. Note: Email delivery requires GitHub Actions setup — see README for instructions.`;
+            document.getElementById('alertEmail').value = '';
+        }
+
+        // ---- Region change ----
+
+        document.getElementById('regionSelect').addEventListener('change', (e) => {
+            currentRegion = e.target.value;
+            renderStations();
+            fetchWeatherData();
+        });
+
+        // ---- Init ----
+
+        populateThresholdInputs();
+        renderStations();
+        renderAlertLog();
+        fetchWeatherData();
+    </script>
+</body>
+</html>
