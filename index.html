@@ -6,21 +6,25 @@
     <title>BC Silviculture Weather Alerts</title>
     <style>
         :root {
-            --bg: #0f1117;
-            --surface: #1a1d27;
-            --surface-hover: #222633;
-            --border: #2a2e3a;
-            --text: #e4e6eb;
-            --text-muted: #8b8fa3;
-            --accent: #4f8ff7;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #22c55e;
-            --frost: #818cf8;
-            --heat: #f97316;
-            --drought: #eab308;
-            --flood: #3b82f6;
-            --wind: #64748b;
+            --bg: #F0F5F1;
+            --surface: #F0F5F1;
+            --surface-hover: #F4F8F5;
+            --border: transparent;
+            --text: #1C3829;
+            --text-muted: #4D7060;
+            --accent: #059669;
+            --danger: #DC2626;
+            --warning: #B45309;
+            --success: #059669;
+            --frost: #6366F1;
+            --heat: #EA580C;
+            --drought: #D97706;
+            --flood: #2563EB;
+            --wind: #475569;
+            --shadow-raised: 6px 6px 14px #C6D4C9, -6px -6px 14px #FFFFFF;
+            --shadow-hover: 9px 9px 20px #BFCDC2, -9px -9px 20px #FFFFFF;
+            --shadow-inset: inset 4px 4px 10px #C6D4C9, inset -4px -4px 10px #FFFFFF;
+            --shadow-subtle: 3px 3px 8px #C6D4C9, -3px -3px 8px #FFFFFF;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -34,7 +38,7 @@
 
         header {
             background: var(--surface);
-            border-bottom: 1px solid var(--border);
+            box-shadow: 0 4px 12px #C6D4C9;
             padding: 1.25rem 2rem;
             display: flex;
             align-items: center;
@@ -71,16 +75,17 @@
 
         select, input[type="number"], input[type="email"] {
             background: var(--bg);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-inset);
             color: var(--text);
             padding: 0.5rem 0.75rem;
             border-radius: 8px;
             font-size: 0.875rem;
             outline: none;
+            border: none;
         }
 
         select:focus, input:focus {
-            border-color: var(--accent);
+            box-shadow: var(--shadow-inset), 0 0 0 2px var(--accent);
         }
 
         button {
@@ -92,15 +97,17 @@
             font-size: 0.875rem;
             cursor: pointer;
             font-weight: 500;
-            transition: opacity 0.15s;
+            transition: box-shadow 0.2s;
+            box-shadow: var(--shadow-raised);
         }
 
-        button:hover { opacity: 0.85; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:hover { box-shadow: var(--shadow-hover); }
+        button:active { box-shadow: var(--shadow-inset); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
         .btn-secondary {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
         }
 
         main {
@@ -119,7 +126,7 @@
 
         .status-card {
             background: var(--surface);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-raised);
             border-radius: 12px;
             padding: 1.25rem;
             position: relative;
@@ -168,7 +175,7 @@
         /* Sections */
         .section {
             background: var(--surface);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-raised);
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
@@ -192,15 +199,15 @@
 
         .station-item {
             background: var(--bg);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-raised);
             border-radius: 8px;
             padding: 1rem;
             cursor: pointer;
-            transition: border-color 0.15s;
+            transition: box-shadow 0.2s;
         }
 
-        .station-item:hover { border-color: var(--accent); }
-        .station-item.selected { border-color: var(--accent); background: rgba(79, 143, 247, 0.05); }
+        .station-item:hover { box-shadow: var(--shadow-hover); }
+        .station-item.selected { box-shadow: var(--shadow-inset); border-left: 3px solid var(--accent); }
 
         .station-item .name { font-weight: 600; margin-bottom: 0.25rem; }
         .station-item .coords { font-size: 0.8rem; color: var(--text-muted); }
@@ -214,7 +221,7 @@
 
         .threshold-group {
             background: var(--bg);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-raised);
             border-radius: 8px;
             padding: 1rem;
         }
@@ -262,7 +269,7 @@
         .weather-table th {
             text-align: left;
             padding: 0.75rem 0.5rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(93, 122, 95, 0.18);
             color: var(--text-muted);
             font-weight: 500;
             font-size: 0.75rem;
@@ -272,7 +279,7 @@
 
         .weather-table td {
             padding: 0.6rem 0.5rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(93, 122, 95, 0.18);
             font-variant-numeric: tabular-nums;
         }
 
@@ -286,11 +293,11 @@
             font-weight: 600;
         }
 
-        .alert-badge.frost { background: rgba(129, 140, 248, 0.15); color: var(--frost); }
-        .alert-badge.heat { background: rgba(249, 115, 22, 0.15); color: var(--heat); }
-        .alert-badge.drought { background: rgba(234, 179, 8, 0.15); color: var(--drought); }
-        .alert-badge.flood { background: rgba(59, 130, 246, 0.15); color: var(--flood); }
-        .alert-badge.wind { background: rgba(100, 116, 139, 0.15); color: var(--wind); border-color: var(--wind); }
+        .alert-badge.frost { background: #EEEEFF; color: var(--frost); }
+        .alert-badge.heat { background: #FFF0E8; color: var(--heat); }
+        .alert-badge.drought { background: #FFF8E1; color: var(--drought); }
+        .alert-badge.flood { background: #EBF2FF; color: var(--flood); }
+        .alert-badge.wind { background: #EEF2F5; color: var(--wind); }
 
         /* Email alerts section */
         .email-form {
@@ -316,7 +323,7 @@
             display: inline-block;
             width: 24px;
             height: 24px;
-            border: 2px solid var(--border);
+            border: 2px solid #C6D4C9;
             border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -336,22 +343,25 @@
             display: flex;
             gap: 0.25rem;
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow-inset);
+            border-radius: 12px;
+            padding: 4px;
         }
 
         .tab {
             padding: 0.75rem 1.25rem;
-            background: none;
+            background: transparent;
             color: var(--text-muted);
             border: none;
-            border-bottom: 2px solid transparent;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.875rem;
-            transition: all 0.15s;
+            transition: all 0.2s;
+            box-shadow: none;
         }
 
-        .tab:hover { color: var(--text); }
-        .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab:hover { color: var(--text); box-shadow: var(--shadow-subtle); }
+        .tab.active { color: var(--accent); font-weight: 600; background: var(--bg); box-shadow: var(--shadow-raised); }
 
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -362,7 +372,7 @@
             align-items: flex-start;
             gap: 0.75rem;
             padding: 0.75rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid rgba(93, 122, 95, 0.18);
         }
 
         .alert-log-item .timestamp {
@@ -385,7 +395,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(45,74,48,0.55);
             z-index: 100;
             align-items: center;
             justify-content: center;
@@ -393,7 +403,7 @@
         .modal-overlay.open { display: flex; }
         .modal-card {
             background: var(--surface);
-            border: 1px solid var(--border);
+            box-shadow: var(--shadow-hover);
             border-radius: 10px;
             padding: 1.5rem;
             width: min(380px, 90vw);
@@ -414,9 +424,9 @@
     <header>
         <div class="logo">
             <svg viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="15" stroke="#4f8ff7" stroke-width="1.5"/>
-                <path d="M8 20 Q10 10 16 8 Q22 10 24 20" stroke="#22c55e" stroke-width="1.5" fill="none"/>
-                <path d="M12 22 Q14 16 16 14 Q18 16 20 22" stroke="#22c55e" stroke-width="1.2" fill="none" opacity="0.6"/>
+                <circle cx="16" cy="16" r="15" stroke="#059669" stroke-width="1.5"/>
+                <path d="M8 20 Q10 10 16 8 Q22 10 24 20" stroke="#059669" stroke-width="1.5" fill="none"/>
+                <path d="M12 22 Q14 16 16 14 Q18 16 20 22" stroke="#059669" stroke-width="1.2" fill="none" opacity="0.6"/>
                 <line x1="16" y1="8" x2="16" y2="24" stroke="#22c55e" stroke-width="0.8" opacity="0.3"/>
             </svg>
             <div>
